@@ -2,7 +2,7 @@ from app import application
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 
-application.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:pass1!rooT@localhost/restaurant'
+application.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://call_me_x:fool@localhost/restaurant'
 application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
 db = SQLAlchemy(application)

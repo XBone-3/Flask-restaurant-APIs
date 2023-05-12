@@ -71,7 +71,7 @@ Admin level = 2
 
 
 class SignUpAPI(MethodResource, Resource):
-    @doc(description=dic_string, tags=['USLL API'])
+    @doc(description=dic_string, tags=['USLL APIs'])
     @use_kwargs(SignUpApiParams, location=('json'))
     @marshal_with(APIResponce)
     def post(self, **kwargs):
@@ -94,7 +94,7 @@ api.add_resource(SignUpAPI, '/signup')
 docs.register(SignUpAPI)
 
 class LoginAPI(MethodResource, Resource):
-    @doc(description="LoginAPI", tags=['USLL API'])
+    @doc(description="LoginAPI", tags=['USLL APIs'])
     @use_kwargs(LoginAPIParams, location=('json'))
     @marshal_with(APIResponce)
     def post(self, **kwargs):
@@ -112,14 +112,14 @@ api.add_resource(LoginAPI, '/login')
 docs.register(LoginAPI)
 
 class LogoutAPI(MethodResource, Resource):
-    @doc(description="Logout User", tags=['USLL API'])
+    @doc(description="Logout User", tags=['USLL APIs'])
     @marshal_with(APIResponce)
     def get(self):
         try:
             if 'user_id' in session:
                 session.clear()
                 return APIResponce().dump(dict(message="Logged out Successfully")), 200
-            return APIResponce().dump(dict(message="User not logged in or Logged out")), 406
+            return APIResponce().dump(dict(message="User not logged in")), 406
         except Exception as e:
             return APIResponce().dump(dict(message=f"Something went wrong, error: {str(e)}")), 404
             
@@ -143,8 +143,7 @@ class AddVendorAPI(MethodResource, Resource):
                     user.level = 1
                     db.session.commit()
                     return APIResponce().dump(dict(message=f"{vendor_id} {user.username} made as vendor successfully")), 200
-                else:
-                    return APIResponce().dump(dict(message="you need to be admin to makke changes to users")), 405
+                return APIResponce().dump(dict(message="you need to be admin to makke changes to users")), 405
             return APIResponce().dump(dict(message="login to make changes")), 406
         except Exception as e:
             return APIResponce().dump(dict(message=f"Adding as venndor failed, error: {str(e)}")), 404
@@ -174,8 +173,7 @@ class GetVendorsAPI(MethodResource, Resource):
                         }
                         vendor_list.append(item)
                     return CommonAPIResponce().dump(dict(Responce=vendor_list)), 200
-                else:
-                    return APIResponce().dump(dict(message="you need to be admin to view vendors list")), 405
+                return APIResponce().dump(dict(message="you need to be admin to view vendors list")), 405
             return APIResponce().dump(dict(message="login to check vendor list")), 406
         except Exception as e:
             return APIResponce().dump(dict(message=f"Error while listing vendors, error: {str(e)}")), 404
@@ -206,8 +204,7 @@ class AddItemAPI(MethodResource, Resource):
                     db.session.add(item)
                     db.session.commit()
                     return APIResponce().dump(dict(message=f"Item {kwargs['item_name']} added successfully")), 200
-                else:
-                    return APIResponce().dump(dict(message="Need to be a vendor to add items")), 405
+                return APIResponce().dump(dict(message="Need to be a vendor to add items")), 405
             return APIResponce().dump(dict(message="Need to login first")), 406
         except Exception as e:
             return APIResponce().dump(dict(message=f"item not added, error: {str(e)}")), 404
@@ -267,8 +264,7 @@ class CreateItemOrderAPI(MethodResource, Resource):
                         db.session.add(order_item)
                     db.session.commit()
                     return APIResponce().dump(dict(message=f"order with item successfully created with order id: {order_id}")), 200
-                else:
-                    return APIResponce().dump(dict(message="logged in user is not a Customer")), 405
+                return APIResponce().dump(dict(message="logged in user is not a Customer")), 405
             return APIResponce().dump(dict(message="user must login")), 406
         except Exception as e:
             return APIResponce().dump(dict(message=f"cannot create order, error: {str(e)}")), 404
@@ -299,8 +295,7 @@ class PlaceOrderAPI(MethodResource, Resource):
                     order.total_amount = total_amount
                     db.session.commit()
                     return APIResponce().dump(dict(message="Order placed successfully")), 200
-                else:
-                    return APIResponce().dump(dict(message="logged in user must be a customer")), 405
+                return APIResponce().dump(dict(message="logged in user must be a customer")), 405
             return APIResponce().dump(dict(message="Must be logged in to place order")), 406
         except Exception as e:
             return APIResponce().dump(dict(message=f"Cannot place order at the momnet, error: {e}")), 404
@@ -332,8 +327,7 @@ class ListOrdersByCustomerAPI(MethodResource, Resource):
                             order_dict['items'].append(appendable_item)
                         orders_list.append(order_dict)
                     return CommonAPIResponce().dump(dict(Responce=orders_list)), 200
-                else:
-                    return APIResponce().dump(dict(message="Need to login as customer")), 405
+                return APIResponce().dump(dict(message="Need to login as customer")), 405
             return APIResponce().dump(dict(message="Need to login")), 406
         except Exception as e:
             return APIResponce().dump(dict(message=f"Could not get list of orders, error: {e}")), 404
@@ -366,8 +360,7 @@ class ListAllOrdersAPI(MethodResource, Resource):
                             order_dict['items'].append(appendable_item)
                         orders_list.append(order_dict)
                     return CommonAPIResponce().dump(dict(Responce=orders_list)), 200
-                else:
-                    return APIResponce().dump(dict(message="you need Admin Privillages to view all orders")), 405
+                return APIResponce().dump(dict(message="you need Admin Privillages to view all orders")), 405
             return APIResponce().dump(dict(message="Login as Admin")), 406
         except Exception as e:
             return APIResponce().dump(dict(message=f"could not get list of orders, error: {e}")), 404
