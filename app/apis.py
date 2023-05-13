@@ -59,7 +59,7 @@ class APIResponce(Schema):
 # class ListOrdersAPIResponce(Schema):
 #     orders = fields.List(fields.Dict(keys=fields.String(), values=fields.String()))
 
-class CommonAPIResponce(Schema):
+class CommonAPIViewResponce(Schema):
     Responce = fields.List(fields.Dict(keys=fields.String(), values=fields.String()))
 
 dic_string = '''
@@ -71,7 +71,7 @@ Admin level = 2
 
 
 class SignUpAPI(MethodResource, Resource):
-    @doc(description=dic_string, tags=['USLL APIs'])
+    @doc(description=dic_string, tags=['USLL API'])
     @use_kwargs(SignUpApiParams, location=('json'))
     @marshal_with(APIResponce)
     def post(self, **kwargs):
@@ -87,14 +87,13 @@ class SignUpAPI(MethodResource, Resource):
             db.session.commit()
             return APIResponce().dump(dict(message=f'User {kwargs["username"]} Successfully Created')), 200
         except Exception as e:
-            print(e)
-            return APIResponce().dump(dict(message='error while creating User')), 404
+            return APIResponce().dump(dict(message=f'error while creating User, error{str(e)}')), 404
 
 api.add_resource(SignUpAPI, '/signup')
 docs.register(SignUpAPI)
 
 class LoginAPI(MethodResource, Resource):
-    @doc(description="LoginAPI", tags=['USLL APIs'])
+    @doc(description="LoginAPI", tags=['USLL API'])
     @use_kwargs(LoginAPIParams, location=('json'))
     @marshal_with(APIResponce)
     def post(self, **kwargs):
@@ -112,14 +111,14 @@ api.add_resource(LoginAPI, '/login')
 docs.register(LoginAPI)
 
 class LogoutAPI(MethodResource, Resource):
-    @doc(description="Logout User", tags=['USLL APIs'])
+    @doc(description="Logout User", tags=['USLL API'])
     @marshal_with(APIResponce)
     def get(self):
         try:
             if 'user_id' in session:
                 session.clear()
                 return APIResponce().dump(dict(message="Logged out Successfully")), 200
-            return APIResponce().dump(dict(message="User not logged in")), 406
+            return APIResponce().dump(dict(message="User not logged in or Logged out")), 406
         except Exception as e:
             return APIResponce().dump(dict(message=f"Something went wrong, error: {str(e)}")), 404
             
@@ -172,7 +171,7 @@ class GetVendorsAPI(MethodResource, Resource):
                             "vendor_username": vendor.username
                         }
                         vendor_list.append(item)
-                    return CommonAPIResponce().dump(dict(Responce=vendor_list)), 200
+                    return CommonAPIViewResponce().dump(dict(Responce=vendor_list)), 200
                 return APIResponce().dump(dict(message="you need to be admin to view vendors list")), 405
             return APIResponce().dump(dict(message="login to check vendor list")), 406
         except Exception as e:
@@ -223,6 +222,7 @@ class ListItemsAPI(MethodResource, Resource):
             for item in items:
                 if item.available_quantity > 0:
                     appendable_item = {
+                        "item_id": item.item_id,
                         "item_name": item.item_name,
                         "restaurant_name": item.restaurant_name,
                         "unit_price": item.unit_price,
@@ -231,7 +231,7 @@ class ListItemsAPI(MethodResource, Resource):
                         "vendor": item.vendor_id
                     }
                     item_list.append(appendable_item)
-            return CommonAPIResponce().dump(dict(Responce=item_list)), 200
+            return CommonAPIViewResponce().dump(dict(Responce=item_list)), 200
         except Exception as e:
             return APIResponce().dump(dict(message=f"Not able to list the products, error: {str(e)}")), 404
 
@@ -283,6 +283,11 @@ class PlaceOrderAPI(MethodResource, Resource):
                 user_id = session['user_id']
                 user_level = User.query.filter_by(user_id=user_id).first().level
                 if user_level == 0:
+                    # customer_id = kwargs['custimer_id']
+                    # if user_id == customer_id:
+                    #     vendor_id = kwargs['vendor_id']
+                    #     item_id = kwargs['item_id']
+                    #     quantity = kwargs['quantity']
                     order_id = kwargs['order_id']
                     order_items = OrderItems.query.filter_by(order_id=order_id, is_active=1)
                     order = Order.query.filter_by(order_id=order_id, is_active=1).first()
@@ -298,7 +303,7 @@ class PlaceOrderAPI(MethodResource, Resource):
                 return APIResponce().dump(dict(message="logged in user must be a customer")), 405
             return APIResponce().dump(dict(message="Must be logged in to place order")), 406
         except Exception as e:
-            return APIResponce().dump(dict(message=f"Cannot place order at the momnet, error: {e}")), 404
+            return APIResponce().dump(dict(message=f"Cannot place order at the momnet, error: {str(e)}")), 404
 
 api.add_resource(PlaceOrderAPI, '/place_order')
 docs.register(PlaceOrderAPI)
@@ -326,11 +331,11 @@ class ListOrdersByCustomerAPI(MethodResource, Resource):
                             }
                             order_dict['items'].append(appendable_item)
                         orders_list.append(order_dict)
-                    return CommonAPIResponce().dump(dict(Responce=orders_list)), 200
+                    return CommonAPIViewResponce().dump(dict(Responce=orders_list)), 200
                 return APIResponce().dump(dict(message="Need to login as customer")), 405
             return APIResponce().dump(dict(message="Need to login")), 406
         except Exception as e:
-            return APIResponce().dump(dict(message=f"Could not get list of orders, error: {e}")), 404
+            return APIResponce().dump(dict(message=f"Could not get list of orders, error: {str(e)}")), 404
 
 api.add_resource(ListOrdersByCustomerAPI, '/list_orders')
 docs.register(ListOrdersByCustomerAPI)
@@ -359,11 +364,11 @@ class ListAllOrdersAPI(MethodResource, Resource):
                             }
                             order_dict['items'].append(appendable_item)
                         orders_list.append(order_dict)
-                    return CommonAPIResponce().dump(dict(Responce=orders_list)), 200
+                    return CommonAPIViewResponce().dump(dict(Responce=orders_list)), 200
                 return APIResponce().dump(dict(message="you need Admin Privillages to view all orders")), 405
             return APIResponce().dump(dict(message="Login as Admin")), 406
         except Exception as e:
-            return APIResponce().dump(dict(message=f"could not get list of orders, error: {e}")), 404
+            return APIResponce().dump(dict(message=f"could not get list of orders, error: {str(e)}")), 404
             
 api.add_resource(ListAllOrdersAPI, '/list_all_orders')
 docs.register(ListAllOrdersAPI)
